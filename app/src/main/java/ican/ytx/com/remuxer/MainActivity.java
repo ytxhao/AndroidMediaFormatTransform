@@ -1,9 +1,8 @@
-package ican.ytx.com.demuxer;
+package ican.ytx.com.remuxer;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -12,14 +11,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         System.loadLibrary("native-lib");
     }
 
-    MediaDemuxer mMediaDemuxer;
+    MediaRemuxer mMediaDemuxer;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         findViewById(R.id.sample_button).setOnClickListener(this);
-        mMediaDemuxer = new MediaDemuxer();
+        mMediaDemuxer = new MediaRemuxer();
 
     }
 
@@ -28,7 +27,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         new Thread(new Runnable() {
             @Override
             public void run() {
-                mMediaDemuxer.demuxer("/storage/emulated/0/cuc_ieschool.flv","/storage/emulated/0/cuc_ieschool.mp4");
+                mMediaDemuxer.remuxer("/storage/emulated/0/cuc_ieschool.flv","/storage/emulated/0/cuc_ieschool.mp4");
             }
         }).start();
     }

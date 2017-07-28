@@ -1,7 +1,7 @@
 #include <jni.h>
 #include <string>
 #include <android/log.h>
-#include "ican_ytx_com_demuxer_MediaDemuxer.h"
+#include <ican_ytx_com_remuxer_MediaRemuxer.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,7 +27,7 @@ extern "C" {
 //const char *out_filename_v = "cuc_ieschool.h264";//Output file URL
 //const char *out_filename_a = "cuc_ieschool.mp3";
 
-JNIEXPORT jint JNICALL Java_ican_ytx_com_demuxer_MediaDemuxer_demuxer
+JNIEXPORT jint JNICALL Java_ican_ytx_com_remuxer_MediaRemuxer_remuxer
         (JNIEnv *env, jobject obj, jstring inputFile, jstring outputFile)
 {
     const char *in_filename = env->GetStringUTFChars(inputFile, NULL);
