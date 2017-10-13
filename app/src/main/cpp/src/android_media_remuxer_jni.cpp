@@ -22,17 +22,35 @@ extern "C" {
 #define J4A_ALOGW(...)  __android_log_print(ANDROID_LOG_WARN,       J4A_LOG_TAG, __VA_ARGS__)
 #define J4A_ALOGE(...)  __android_log_print(ANDROID_LOG_ERROR,      J4A_LOG_TAG, __VA_ARGS__)
 
+#define J4A_VLOGV(...)  __android_log_vprint(ANDROID_LOG_VERBOSE,   J4A_LOG_TAG, __VA_ARGS__)
+#define J4A_VLOGD(...)  __android_log_vprint(ANDROID_LOG_DEBUG,     J4A_LOG_TAG, __VA_ARGS__)
+#define J4A_VLOGI(...)  __android_log_vprint(ANDROID_LOG_INFO,      J4A_LOG_TAG, __VA_ARGS__)
+#define J4A_VLOGW(...)  __android_log_vprint(ANDROID_LOG_WARN,      J4A_LOG_TAG, __VA_ARGS__)
+#define J4A_VLOGE(...)  __android_log_vprint(ANDROID_LOG_ERROR,     J4A_LOG_TAG, __VA_ARGS__)
 
 //const char *in_filename  = "cuc_ieschool.flv";//Input file URL
 //const char *out_filename_v = "cuc_ieschool.h264";//Output file URL
 //const char *out_filename_a = "cuc_ieschool.mp3";
+
+/*
+FIX:AAC in some container format (FLV, MP4, MKV etc.) need
+"aac_adtstoasc" bitstream filter (BSF)
+*/
+//'1': Use AAC Bitstream Filter
+#define USE_AACBSF 1
+
+
+void log_callback(void* ptr, int level, const char* fmt,va_list vl)
+{
+    //J4A_VLOGD(fmt,vl);
+}
 
 JNIEXPORT jint JNICALL Java_ican_ytx_com_remuxer_MediaRemuxer_remuxer
         (JNIEnv *env, jobject obj, jstring inputFile, jstring outputFile)
 {
     const char *in_filename = env->GetStringUTFChars(inputFile, NULL);
     const char *out_filename = env->GetStringUTFChars(outputFile, NULL);
-
+    AVBitStreamFilterContext* aacbsfc = NULL;
     AVOutputFormat *ofmt = NULL;
     //输入对应一个AVFormatContext，输出对应一个AVFormatContext
     //（Input AVFormatContext and Output AVFormatContext）
@@ -41,6 +59,8 @@ JNIEXPORT jint JNICALL Java_ican_ytx_com_remuxer_MediaRemuxer_remuxer
     int ret, i;
     int frame_index = 0;
     av_register_all();
+    av_log_set_callback(log_callback);
+    J4A_ALOGD("avcodec_configuration=%s",avcodec_configuration());
     //输入（Input）
     if ((ret = avformat_open_input(&ifmt_ctx, in_filename, 0, 0)) < 0) {
         J4A_ALOGD( "Could not open input file.");
@@ -96,6 +116,10 @@ JNIEXPORT jint JNICALL Java_ican_ytx_com_remuxer_MediaRemuxer_remuxer
         goto end;
     }
 
+#if USE_AACBSF
+    aacbsfc =  av_bitstream_filter_init("aac_adtstoasc");
+#endif
+
     while (1) {
         AVStream *in_stream, *out_stream;
         //获取一个AVPacket（Get an AVPacket）
@@ -105,6 +129,9 @@ JNIEXPORT jint JNICALL Java_ican_ytx_com_remuxer_MediaRemuxer_remuxer
         in_stream  = ifmt_ctx->streams[pkt.stream_index];
         out_stream = ofmt_ctx->streams[pkt.stream_index];
         /* copy packet */
+#if USE_AACBSF
+        av_bitstream_filter_filter(aacbsfc, out_stream->codec, NULL, &pkt.data, &pkt.size, pkt.data, pkt.size, 0);
+#endif
         //转换PTS/DTS（Convert PTS/DTS）
         pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base, out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
         pkt.dts = av_rescale_q_rnd(pkt.dts, in_stream->time_base, out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));

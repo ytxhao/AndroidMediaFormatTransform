@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         new Thread(new Runnable() {
             @Override
             public void run() {
-                mMediaDemuxer.remuxer("/storage/emulated/0/cuc_ieschool.flv","/storage/emulated/0/cuc_ieschool.mp4");
+                mMediaDemuxer.remuxer("/storage/emulated/0/output_file2.mp4","/storage/emulated/0/cuc_ieschool.mp4");
             }
         }).start();
     }
